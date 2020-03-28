@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Server.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="DataBaseManage.cpp">
+      <Filter>DataBase</Filter>
+    </ClCompile>
+    <ClCompile Include="User.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Server">
+      <UniqueIdentifier>{f8b61e5d-e85d-4c97-be58-ad6fc9c24d2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DataBase">
+      <UniqueIdentifier>{8a9fa13e-c030-427e-b92a-547166f37ba0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="DataBaseManage.h">
+      <Filter>DataBase</Filter>
+    </ClInclude>
+    <ClInclude Include="User.h" />
+  </ItemGroup>
+</Project>
