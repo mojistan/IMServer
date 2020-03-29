@@ -8,7 +8,9 @@
     <ClCompile Include="DataBaseManage.cpp">
       <Filter>DataBase</Filter>
     </ClCompile>
-    <ClCompile Include="User.cpp" />
+    <ClCompile Include="User.cpp">
+      <Filter>User</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Server">
@@ -16,6 +18,9 @@
     </Filter>
     <Filter Include="DataBase">
       <UniqueIdentifier>{8a9fa13e-c030-427e-b92a-547166f37ba0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="User">
+      <UniqueIdentifier>{eab4a6d5-3aab-4f0f-97e5-8a39f2cdb900}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -25,6 +30,8 @@
     <ClInclude Include="DataBaseManage.h">
       <Filter>DataBase</Filter>
     </ClInclude>
-    <ClInclude Include="User.h" />
+    <ClInclude Include="User.h">
+      <Filter>User</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

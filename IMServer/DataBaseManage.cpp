@@ -16,7 +16,7 @@ bool CDataBaseManage::ConnectDatabase(const char* database)
 	mysql_init(&mysql);  //连接mysql，数据库
 
 	//返回false则连接失败，返回true则连接成功
-	if (!(mysql_real_connect(&mysql, "localhost", "root", "", database, 3306, NULL, 0))) //主机，用户名，密码，数据库名，端口号（可以写默认0或者3306等
+	if (!(mysql_real_connect(&mysql, "localhost", "root", "123456", database, 3306, NULL, 0))) //主机，用户名，密码，数据库名，端口号（可以写默认0或者3306等
 	{
 		printf("Error connecting to database:%s\n", mysql_error(&mysql));
 		return false;

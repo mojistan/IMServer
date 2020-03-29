@@ -70,9 +70,11 @@ void CServer::logIn(User user,int socket)
 }
 void CServer::reg(User user,int socket)
 {
-    database->InsertData(user);        //添加判断是否成功加入
-    char* reply = "REG|SUCCESS|";
-    write(socket, reply, strlen(reply));
+    if (database->InsertData(user))        //添加判断是否成功注册加入
+    {
+        char* reply = "REG|SUCCESS|";
+        write(socket, reply, strlen(reply));
+    }
 }
 int CServer::handleRequest(const char* msg, vector<string> &splitMsg)
 {
@@ -125,12 +127,14 @@ int CServer::initialServer()
 
     return 0;
 }
-
+//服务器主要循环，负责接收链接
 int CServer::startServer()
 {
+    //使用epoll实现复用
     database->ConnectDatabase("imusers");
     for( ; ; )
     {
+        //修改使用epoll机制
         clntAddrLen = sizeof(clntAddr);
         clntSock = accept(servSock, (struct sockaddr*) & clntAddr, &clntAddrLen);
 
@@ -150,8 +154,10 @@ int CServer::addCnnect()
 {
     return 0;
 }
+
 void CServer::Split(const string& src, const string& separator, vector<string>& dest)
 {
+    //按照separator分隔符将字符串分隔开
     string str = src;
     string substring;
     string::size_type start = 0, index;
