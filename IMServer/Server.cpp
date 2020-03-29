@@ -2,48 +2,61 @@
 
 #define BUF_SIZE 1024
 #define MAX_CLNT 256
-
-void CServer::handleClnt(int sock)
+#define EPOLL_SIZE 50
+void CServer::handleClnt()
 {
-    int clnt_sock = sock;
-    long int str_len = 0, i;
+    long int str_len = 0;
     char msg[BUF_SIZE];
-
-    while ((str_len = read(clnt_sock, msg, sizeof(msg))) != 0)
+    int epCount = 0;
+    while (1)
     {
-        if (str_len < 0)continue;
-        vector<string> splitMsg;
-        int type =  handleRequest(msg,splitMsg);     //获取消息类型
-        switch (type)    //根据消息类型分类处理
+        epCount = epoll_wait(epFd, epEvents, EPOLL_SIZE, NULL);
+        for (int i = 0; i < epCount; i++)
         {
-        case MSG:
-            sendMsg(msg, strlen(msg));
-            break;
-        case REG:
-            reg(User(splitMsg[1].data(), splitMsg[2].data(), splitMsg[3].data()),sock);
-            break;
-        case LOGIN:
-            logIn(User(splitMsg[1].data(), splitMsg[2].data()),sock);
-            break;
-        default:
-            break;
+            int curSock = epEvents[i].data.fd;
+            str_len = recv(curSock, msg, sizeof(msg),0);
+            if (str_len == 0)           //接收到消息为0时，代表当前客户端已经断开连接
+            {
+                socketsMutx.lock();
+                epoll_ctl(epFd, EPOLL_CTL_DEL, curSock, NULL);
+                for (i = 0; i < clntCnt; i++) //删除没有连接的客户端
+                {
+                    if (curSock == clntSocks[i])
+                    {
+                        while (i++ < clntCnt - 1)
+                            clntSocks[i] = clntSocks[i + 1];
+                        break;
+                    }
+                }
+                clntCnt--;
+                socketsMutx.unlock();
+                close(curSock);
+                printf("socket : %d closed\n", curSock);
+            }
+            else if (str_len < 0)
+            {
+                errorHandling("recv() error");
+            }
+            else {
+                vector<string> splitMsg;
+                int type = handleRequest(msg, splitMsg);     //获取消息类型
+                switch (type)    //根据消息类型分类处理
+                {
+                case MSG:
+                    sendMsg(msg, strlen(msg));
+                    break;
+                case REG:
+                    reg(User(splitMsg[1].data(), splitMsg[2].data(), splitMsg[3].data()), curSock);
+                    break;
+                case LOGIN:
+                    logIn(User(splitMsg[1].data(), splitMsg[2].data()), curSock);
+                    break;
+                default:
+                    break;
+                }
+            }
         }
-   // sendMsg(msg, str_len);
     }
-    //接收到消息为0时，代表当前客户端已经断开连接
-    socketsMutx.lock();
-    for (i = 0; i < clntCnt; i++) //删除没有连接的客户端
-    {
-        if (clnt_sock == clntSocks[i])
-        {
-            while (i++ < clntCnt - 1)
-                clntSocks[i] = clntSocks[i + 1];
-            break;
-        }
-    }
-    clntCnt--;
-    socketsMutx.unlock();
-    close(clnt_sock);
 }
 void CServer::sendMsg(const char* msg, long int len) //向连接的所有客户端发送消息
 {
@@ -127,24 +140,28 @@ int CServer::initialServer()
 
     return 0;
 }
-//服务器主要循环，负责接收链接
+//服务器主循环，负责接收链接
 int CServer::startServer()
 {
     //使用epoll实现复用
     database->ConnectDatabase("imusers");
+    epFd = epoll_create(MAX_CLNT);
+    epEvents = new epoll_event[MAX_CLNT];
+    thread th(&CServer::handleClnt, this);  //创建线程为新客户端服务，并且把clnt_sock作为参数传递
+    th.detach();
+
     for( ; ; )
     {
-        //修改使用epoll机制
         clntAddrLen = sizeof(clntAddr);
         clntSock = accept(servSock, (struct sockaddr*) & clntAddr, &clntAddrLen);
 
+
         socketsMutx.lock();
+            epEvent.events = EPOLLIN;
+            epEvent.data.fd = clntSock;
+            epoll_ctl(epFd, EPOLL_CTL_ADD, clntSock, &epEvent);
             clntSocks[clntCnt++] = clntSock; //写入新socket连接
         socketsMutx.unlock();
-
-        thread th(&CServer::handleClnt, this, clntSock);  //创建线程为新客户端服务，并且把clnt_sock作为参数传递
-        th.detach();
-
 
         printf("Connected client IP: %s \n", inet_ntoa(clntAddr.sin_addr)); //客户端连接的ip地址
     }

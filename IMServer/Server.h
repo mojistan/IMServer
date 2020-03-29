@@ -22,6 +22,7 @@
 #include <netinet/in.h>
 #include <thread>
 #include <mutex>
+#include<sys/epoll.h>
 #include"DataBaseManage.h"
 #define MAX_CLNT 256
 #define LOGIN 0
@@ -37,7 +38,7 @@ public:
 	int handleRequest(const char* msg, vector<string>& splitMsg);
 private:
 	void errorHandling(const char* msg);//错误处理函数
-	void handleClnt(int sock);     //处理客户端请求
+	void handleClnt();     //处理客户端请求
 	void sendMsg(const char* msg,long int len);
 	void logIn(User user,int socket);
 	void reg(User user,int socket);
@@ -51,6 +52,10 @@ private:
 	int clntCnt;
 	sockaddr_in servAddr, clntAddr;      //地址
 	socklen_t clntAddrLen;
+
+	epoll_event epEvent;
+	epoll_event* epEvents;
+	int epFd;
 
 	mutex socketsMutx;
 
